@@ -1,0 +1,14 @@
+{
+  "name": "css-shortener",
+  "version": "0.0.1",
+  "author": "Alexander Ruliov <alexander.ruliov@gmail.com>",
+  "devDependencies": {
+    "mocha": "^2.1.0"
+  },
+  "dependencies": {
+    "htmlparser2": "^3.8.2"
+  },
+  "scripts": {
+    "test": "mocha -R min"
+  }
+}
