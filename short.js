@@ -1,4 +1,6 @@
-exports.shortIt = function(options) {
+exports.TokensShortener = function(options) {
+  if (!(this instanceof arguments.callee)) return new arguments.callee(options);
+
   var tokensGenerator = options.tokensGenerator;
 
   /* Можно:
@@ -18,22 +20,9 @@ exports.shortIt = function(options) {
    *           Остановимся на текущей сложности, хотя возможно её таки можно уменьшить,
    *           если сильно захотеть (хотя и непонятно, куда ей тут уменьшиться, от M log M, похоже, не уйти).
    */
-  var map = {}, list = [];
+  var map = {}, list = [], tokens = [];
 
-  var gen = {next: function(token) {
-    if (token === null) {
-      gen.next = {next: function(){ return {value: undefined, done: true}; }};
-      
-      list.forEach(function(x) { x.weight = x.token.length * x.count; });
-      list.sort(function(a, b) { return b.weight - a.weight; });
-
-      list.forEach(function(x) {
-        x.toToken = tokensGenerator.next().value;
-      });
-
-      return {value: {map: map, list: list}, done: true};
-    }
-
+  this.feed = function(token) {
     var x = map[token];
     if (x) {
       x.count++;
@@ -44,10 +33,22 @@ exports.shortIt = function(options) {
       };
       list.push(x);
     }
+  };
 
-    return {value: undefined, done: false};
-  }};
-  return gen;
+  this.shorten = function() {
+    list.forEach(function(x) { x.weight = x.token.length * x.count; });
+    list.sort(function(a, b) { return b.weight - a.weight; });
+
+    list.forEach(function(x, i) {
+      if (i < tokens.length) {
+        x.toToken = tokens[i];
+      } else {
+        tokens.push(x.toToken = tokensGenerator.next().value);
+      }
+    });
+
+    return {map: map, list: list};
+  };
 };
 
 exports.tokensGenerator = function(options) {

@@ -2,51 +2,45 @@ var assert = require('assert'),
 
     _short = require('../short'),
     tokensGenerator = _short.tokensGenerator,
-    shortIt = _short.shortIt;
+    TokensShortener = _short.TokensShortener;
 
-describe('shortIt', function() {
+describe('TokensShortener', function() {
   describe('a, a, a, b, b, c', function() {
     it('should do a -> a, b -> b, c -> aa', function() {
-      var shortItGen = shortIt({
+      var shortItGen = new TokensShortener({
         tokensGenerator: tokensGenerator(['a', 'b'])
       });
 
       var oldTokens = ['b', 'a', 'a', 'c', 'a', 'b', 'a'];
 
       oldTokens.forEach(function(x) {
-        var g = shortItGen.next(x);
-        assert(!g.done);
+        shortItGen.feed(x);
       });
 
-      var result = shortItGen.next(null);
+      var result = shortItGen.shorten();
       
-      assert(result.done);
-      
-      assert.equal(result.value.map.a.toToken, 'a');
-      assert.equal(result.value.map.b.toToken, 'b');
-      assert.equal(result.value.map.c.toToken, 'aa');
+      assert.equal(result.map.a.toToken, 'a');
+      assert.equal(result.map.b.toToken, 'b');
+      assert.equal(result.map.c.toToken, 'aa');
     });
   });
 
   describe('aaaa, b, b, b', function() {
     it('should do aaaa -> a, b -> b', function() {
-      var shortItGen = shortIt({
+      var shortItGen = new TokensShortener({
         tokensGenerator: tokensGenerator(['a', 'b'])
       });
 
       var oldTokens = ['b', 'aaaa', 'b', 'b'];
 
       oldTokens.forEach(function(x) {
-        var g = shortItGen.next(x);
-        assert(!g.done);
+        shortItGen.feed(x);
       });
 
-      var result = shortItGen.next(null);
+      var result = shortItGen.shorten();
       
-      assert(result.done);
-      
-      assert.equal(result.value.map.aaaa.toToken, 'a');
-      assert.equal(result.value.map.b.toToken, 'b');
+      assert.equal(result.map.aaaa.toToken, 'a');
+      assert.equal(result.map.b.toToken, 'b');
     });
   });
 });
