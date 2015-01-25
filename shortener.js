@@ -3,7 +3,7 @@ var fs = require('fs'),
     HtmlClassParser = require('./htmlReader').Parser,
     
     _short = require('./short'),
-    ShortIt = _short.shortIt,
+    TokensShortener = _short.TokensShortener,
     TokensGenerator = _short.tokensGenerator;
 
 var argv = process.argv.slice(2);
@@ -48,7 +48,7 @@ var htmlParser = new HtmlClassParser(),
       firstLetters: _short.ALPHA_LETTERS,
       letters: _short.ALPHA_LETTERS_PLUS_DIGITS_HYPHEN_UNDERSCORE
     }),
-    shortIt = ShortIt({
+    tokensShortener = new TokensShortener({
       tokensGenerator: tokensGenerator
     });
 
@@ -64,7 +64,7 @@ inputStream.on('readable', function() {
 function drainClasses() {
   var v;
   while (v = htmlClassIt.next(), typeof v.value === 'string')
-    shortIt.next(v.value);
+    tokensShortener.feed(v.value);
 }
 
 var stopWrite = false;
@@ -74,13 +74,18 @@ process.stdout.on('error', function(err) {
 });
 
 inputStream.on('end', function() {
-  inputStream.close();
+  // FIXME
+  if (typeof inputStream.close === 'function') {
+    inputStream.close();
+  } else if (typeof inputStream.end === 'function') {
+    inputStream.end();
+  }
 
   htmlParser.end();
 
   drainClasses();
 
-  var result = shortIt.next(null).value,
+  var result = tokensShortener.shorten(),
       toJsonMap = {};
 
   result.list.forEach(function(x) {
